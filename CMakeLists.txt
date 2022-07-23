@@ -1,6 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 PROJECT(stl2bmp VERSION 1.0.0 LANGUAGES CXX)
-#TODO Set path to Eigen and glfw
 IF(MSVC)
         SET(Eigen3_DIR "C:/eigen-3.4.0/cmake")
         SET(glfw3_DIR "C:/glfw-3.3.7/lib/cmake/glfw3")
@@ -47,9 +46,12 @@ ADD_CUSTOM_TARGET(check
         DEPENDS stl2bmp
         COMMAND stl2bmp ${CMAKE_SOURCE_DIR}/data/torus.stl
         )
-SET(RESOURCE_FILES  ${CMAKE_BINARY_DIR}/README.txt ${CMAKE_SOURCE_DIR}/data/torus.stl )
+SET(RESOURCE_FILES
+        ${CMAKE_BINARY_DIR}/README.txt ${CMAKE_SOURCE_DIR}/data/torus.stl )
 IF(MSVC)
-        SET(RESOURCE_FILES ${RESOURCE_FILES} ${CMAKE_SOURCE_DIR}/scripts/stl2bmp720.bat  ${CMAKE_SOURCE_DIR}/scripts/bmp2png.bat)
+        SET(RESOURCE_FILES ${RESOURCE_FILES}
+                ${CMAKE_SOURCE_DIR}/scripts/stl2bmp720.bat
+                ${CMAKE_SOURCE_DIR}/scripts/bmp2png.bat)
 ELSE()
         SET(RESOURCE_FILES ${RESOURCE_FILES} ${CMAKE_SOURCE_DIR}/scripts/bmp2png.sh)
 ENDIF()
