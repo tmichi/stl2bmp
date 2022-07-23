@@ -1,6 +1,5 @@
 #!/bin/bash
-# Usage
-# ./bmp2png.sh image_dir
+# shellcheck disable=SC2086
 if [ $# -ne 1 ];
 then
         echo "Usage : %0 image_dir"

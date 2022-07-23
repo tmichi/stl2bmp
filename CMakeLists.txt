@@ -47,13 +47,13 @@ ADD_CUSTOM_TARGET(check
         DEPENDS stl2bmp
         COMMAND stl2bmp ${CMAKE_SOURCE_DIR}/data/torus.stl
         )
-INSTALL(TARGETS stl2bmp RUNTIME DESTINATION .)
-
+SET(RESOURCE_FILES  ${CMAKE_BINARY_DIR}/README.txt ${CMAKE_SOURCE_DIR}/data/torus.stl )
 IF(MSVC)
-  INSTALL(FILES ${CMAKE_BINARY_DIR}/README.txt ${CMAKE_SOURCE_DIR}/data/torus.stl ${CMAKE_SOURCE_DIR}/scripts/stl2bmp720.bat  ${CMAKE_SOURCE_DIR}/scripts/bmp2png.bat DESTINATION .)   
+        SET(RESOURCE_FILES ${RESOURCE_FILES} ${CMAKE_SOURCE_DIR}/scripts/stl2bmp720.bat  ${CMAKE_SOURCE_DIR}/scripts/bmp2png.bat)
 ELSE()
-INSTALL(FILES ${CMAKE_BINARY_DIR}/README.txt ${CMAKE_SOURCE_DIR}/data/torus.stl ${CMAKE_SOURCE_DIR}/scripts/stl2bmp.sh DESTINATION .)
-
+        SET(RESOURCE_FILES ${RESOURCE_FILES} ${CMAKE_SOURCE_DIR}/scripts/bmp2png.sh)
 ENDIF()
-set(CPACK_GENERATOR "ZIP" CACHE STRING "Generators to support. semi-colon delimited list")
-include(CPack)
+INSTALL(TARGETS stl2bmp RUNTIME DESTINATION .)
+INSTALL(FILES ${RESOURCE_FILES} DESTINATION .)
+SET(CPACK_GENERATOR "ZIP" CACHE STRING "Generators to support. semi-colon delimited list")
+INCLUDE(CPack)
