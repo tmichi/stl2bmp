@@ -9,9 +9,6 @@
 * OpenGL 
 * GLFW (3.0 or later)
 * Eigen (3.0 or later)
-
-* I recommend using a package manager (e.g. homebrew) to install glfw and Eigen.
-* I confirmed that it works on Windows10 and MacOS Monterey.
 ## Build with cmake
 ```shell
 % mkdir build    
