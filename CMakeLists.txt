@@ -31,7 +31,7 @@ IF(UNIX)
                 MESSAGE(fatal, "Unknown platform")
         ENDIF ()
 ELSEIF(MSVC) #Visual Studio
-        ADD_COMPILE_DEFINITIONS(/wd4244 /wd4819 /wd4127 /wd26495 /wd26451 /wd26812) #disable warnings
+        #ADD_COMPILE_DEFINITIONS(/wd4244 /wd4819 /wd4127 /wd26495 /wd26451 /wd26812) #disable warnings
         SET(CMAKE_CXX_FLAGS "/W4 /EHsc")
 ELSE()
         MESSAGE(fatal, "Unknown platform")
@@ -48,5 +48,12 @@ ADD_CUSTOM_TARGET(check
         COMMAND stl2bmp ${CMAKE_SOURCE_DIR}/data/torus.stl
         )
 INSTALL(TARGETS stl2bmp RUNTIME DESTINATION .)
-INSTALL(FILES ${CMAKE_BINARY_DIR}/README.txt ${CMAKE_SOURCE_DIR}/data/torus.stl DESTINATION .)
+
+IF(MSVC)
+  INSTALL(FILES ${CMAKE_BINARY_DIR}/README.txt ${CMAKE_SOURCE_DIR}/data/torus.stl ${CMAKE_SOURCE_DIR}/scripts/stl2bmp720.bat  ${CMAKE_SOURCE_DIR}/scripts/bmp2png.bat DESTINATION .)   
+ELSE()
+INSTALL(FILES ${CMAKE_BINARY_DIR}/README.txt ${CMAKE_SOURCE_DIR}/data/torus.stl ${CMAKE_SOURCE_DIR}/scripts/stl2bmp.sh DESTINATION .)
+
+ENDIF()
+set(CPACK_GENERATOR "ZIP" CACHE STRING "Generators to support. semi-colon delimited list")
 include(CPack)

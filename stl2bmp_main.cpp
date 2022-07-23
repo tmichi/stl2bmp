@@ -21,15 +21,16 @@
 #include <stl2bmp_version.hpp>
 //#define stl2bmp_VERSION 0.1.0
 
-#if __cplusplus >= 201703L //C++17
+//#if __cplusplus >= 201703L //C++17
 #include <filesystem>
 namespace fs = std::filesystem;
-#elif __cplusplus >= 201103L //C++11
+/*#elif __cplusplus >= 201103L //C++11
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
 #else
 #error C++17 or C++14+Boost filesystem required.
 #endif
+*/
 bool fwrite(std::ofstream& fout) {
         return fout.good();
 }
