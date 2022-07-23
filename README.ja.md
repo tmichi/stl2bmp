@@ -23,8 +23,8 @@ glfwとかEigenはhomebrew などで入れておくと楽です。
 ```
 ### Windows
 * CMakeLists.txtに以下の変数を追加 
-  * Eigen3_DIR : Eigen3Config.cmakeがあるところ　（例: SET(Eigen3_DIR "C:/Program Files (x86)/Eigen3/share/eigen3/cmake"))
-  * glfw_DIR : glfw3Config.cmakeがあるところ（例 SET(glfw_DIR "C:/glfw-3.3.7/lib/cmake/glfw3"))
+  * ``Eigen3_DIR`` : Eigen3Config.cmakeがあるところ　（例: ``SET(Eigen3_DIR "C:/Program Files (x86)/Eigen3/share/eigen3/cmake")``)
+  * ``glfw_DIR`` : glfw3Config.cmakeがあるところ（例 ``SET(glfw_DIR "C:/glfw-3.3.7/lib/cmake/glfw3")``)
 * CMakeでVSソリューションファイルを作って、Visual Studioでビルドする
 #Linux
 ## 手動でコンパイル
@@ -52,7 +52,7 @@ glfwとかEigenはhomebrew などで入れておくと楽です。
    ```
 ## 入出力
 * 画像の出力を他にしたい(TIFFとか)。
-    * 画像変換ソフトでのバッチ処理をご利用ください。知っているものですと、IrfanViewとかImagemagickなどが考えられます。
+    * 画像変換ソフトでのバッチ処理をご利用ください。知っているものですと、IrfanViewとかImagemagickなどが考えられます。script/bmp2png.sh にbashでPNGに一括変換するプログラムを用意しました。
     ```shell
     $ convert -density 360 -units PixelsPerInch sample01.bmp sample01.tif
     ```

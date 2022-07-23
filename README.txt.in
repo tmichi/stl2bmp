@@ -1,0 +1,8 @@
+stl2bmp version @stl2bmp_VERSION_MAJOR@.@stl2bmp_VERSION_MINOR@.@stl2bmp_VERSION_PATCH@
+Takashi Michikawa <peppery-eternal.0b@icloud.com>
+
+Usage :
+ $ stl2bmp input.stl {dpi}
+      - input.stl Input STL file (Binary only).
+      - dpi DPI of the images. Default value is 360 (dpi)
+      - Output : input/image?????.bmp  (1bit BMP file)
