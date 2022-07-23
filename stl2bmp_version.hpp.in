@@ -1,0 +1,7 @@
+#ifndef stl2bmp_VERSION_HPP
+#define stl2bmp_VERSION_HPP 1
+#define stl2bmp_VERSION_MAJOR @stl2bmp_VERSION_MAJOR@
+#define stl2bmp_VERSION_MINOR @stl2bmp_VERSION_MINOR@
+#define stl2bmp_VERSION_PATCH @stl2bmp_VERSION_PATCH@
+#define stl2bmp_VERSION "@stl2bmp_VERSION_MAJOR@.@stl2bmp_VERSION_MINOR@.@stl2bmp_VERSION_PATCH@"
+#endif //stl2bmp_VERSION_HPP
