@@ -1,6 +1,8 @@
 stl2bmp version @stl2bmp_VERSION_MAJOR@.@stl2bmp_VERSION_MINOR@.@stl2bmp_VERSION_PATCH@
 Takashi Michikawa <peppery-eternal.0b@icloud.com>
 
+url : https://github.com/tmichi/stl2bmp
+
 Usage :
  $ stl2bmp input.stl {dpi}
       - input.stl Input STL file (Binary only).
