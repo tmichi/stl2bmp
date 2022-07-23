@@ -28,10 +28,11 @@ Voxelized images are saved as 1bit Bitmap images in input/ (stem of the input fi
 
 ### Example
 ``` shell
-% ./stl2bmp Vjikan_2.stl
-stl2bmp v.0.1.0
-128/128
-Images saved to "Vjikan_2"
+% ./stl2bmp torus.stl
+stl2bmp v.1.0.0
+dpi:360
+   29/29
+Images saved to "/hogehoge/torus".
 %
 ```
 ## Brief introduction to the algorithm
