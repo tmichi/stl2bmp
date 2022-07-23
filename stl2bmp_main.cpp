@@ -141,7 +141,7 @@ int main(int argc, char **argv) {
                                 ::glReadPixels(0, 0, size.x(), size.y(), GL_RGBA, GL_UNSIGNED_BYTE, &buffer[0]);
                                 
                                 std::stringstream ss;
-                                ss << output_dir.string() << "/image" << std::setw(5) << std::setfill('0') << z << ".bmp";
+                                ss << output_dir.string() << "/image" << std::setw(5) << std::setfill('0') << size.z() -1 -z << ".bmp";
                                 std::ofstream fout(ss.str(), std::ios::binary);
                                 if (!fout) {
                                         throw std::runtime_error(ss.str() + " cannot be open");
