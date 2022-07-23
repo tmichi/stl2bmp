@@ -45,5 +45,4 @@ We suppose that the input mesh is closed and clean ( no skiny triangles). You ma
 * MIT License (See LICENSE.txt)
 # Author
 * Takashi Michikawa <peppery-eternal.0b@icloud.com> : Image Processing Tream, RIKEN Center for Advanced Photonics.
-# Copyright
-(c)2022 - RIKEN
+
