@@ -1,7 +1,7 @@
 /**
  * @file stl2bmp.cpp
  * @brief Convert STL files (binary) to 1bit BMP files (a.k.a voxelization)
- * @author Takashi Michikawa <ram-axed-0b@icloud.com> RIKEN Center for Advanced Photonics
+ * @author Takashi Michikawa <peppery-eternal.0b@icloud.com> RIKEN Center for Advanced Photonics
  * @copyright MIT license (see LICENSE.txt
  */
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
