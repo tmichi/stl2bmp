@@ -1,5 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
-PROJECT(stl2bmp VERSION 0.1.0 LANGUAGES CXX)
+PROJECT(stl2bmp VERSION 1.0.0 LANGUAGES CXX)
 #TODO Set path to Eigen and glfw
 IF(MSVC)
         SET(Eigen3_DIR "C:/eigen-3.4.0/cmake")
