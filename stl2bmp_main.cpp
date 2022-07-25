@@ -9,7 +9,6 @@
 #include <windows.h>
 #pragma comment(lib, "opengl32.lib")
 #endif
-
 #include <vector>
 #include <tuple>
 #include <fstream>
@@ -22,9 +21,6 @@
 //#define stl2bmp_VERSION 0.1.0
 #include <filesystem>
 namespace fs = std::filesystem;
-// If C++17 is not supported, use boost filesystem.
-//#include <boost/filesystem.hpp>
-//namespace fs = boost::filesystem;
 bool fwrite(std::ofstream& fout) {
         return fout.good();
 }
@@ -44,13 +40,13 @@ int main(int argc, char **argv) {
                 if (!fs::exists(input_file)) {
                         throw std::runtime_error(input_file.string() + " does not exist");
                 }
-                const int dpi = (argc < 3) ? 360 : std::atoi(argv[2]);
+                const int dpi = (argc < 3) ? 360 : std::stoi(argv[2]);
                 if (dpi <= 0) {
                         throw std::runtime_error("Invalid DPI : " + std::to_string(dpi));
                 }
                 std::cerr<<"dpi:"<<dpi<<std::endl;
                 const double pitch = 25.4 / dpi;
-                const int32_t ppm = static_cast<int32_t>(std::round(1000.0 / pitch));
+                const auto ppm = static_cast<int32_t>(std::round(1000.0 / pitch));
                 
                 const fs::path output_dir = input_file.stem();
                 fs::create_directories(output_dir);
@@ -141,7 +137,7 @@ int main(int argc, char **argv) {
                                 if (!fout) {
                                         throw std::runtime_error(ss.str() + " cannot be open");
                                 } else {
-                                        const uint32_t bytePerLine = static_cast<uint32_t> ((((size.x() + 7) / 8 + 3) / 4) * 4);
+                                        const auto bytePerLine = static_cast<uint32_t> ((((size.x() + 7) / 8 + 3) / 4) * 4);
                                         const uint32_t imageSize = uint32_t(size.y()) * bytePerLine;
                                         const uint32_t numPalettes = 2;
                                         fwrite(fout, uint16_t(0x4D42), uint32_t(62u + imageSize), uint16_t(0), uint16_t(0), uint32_t(14u + 40u + numPalettes * 4u));
