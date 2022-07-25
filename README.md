@@ -1,7 +1,7 @@
 # stl2bmp
 ![teaser image](images/overview.png)
 * stl2bmp voxelizes (descritizes) STL files as stacked 1bit bitmap images. 
-* The user can control pixel resolution.
+* The user can control pixel resolution by DPI.
 * it computes reasonably fast by using OpenGL Z-buffer.
 # Build
 ## Dependencies 

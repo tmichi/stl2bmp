@@ -1,9 +1,15 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
-PROJECT(stl2bmp VERSION 1.0.0 LANGUAGES CXX)
+PROJECT(stl2bmp
+        VERSION 1.0.0
+        DESCRIPTION "Voxelization of binary STL files"
+        HOMEPAGE_URL https://github.com/tmichi/stl2bmp
+        LANGUAGES CXX)
 IF(MSVC)
         SET(Eigen3_DIR "C:/eigen-3.4.0/cmake")
         SET(glfw3_DIR "C:/glfw-3.3.7/lib/cmake/glfw3")
 ENDIF(MSVC)
+SET(PACK_ENABLED 0)
+SET(CMAKE_INSTALL_PREFIX "./local/")
 SET(CMAKE_BUILD_TYPE Release) #Debug,RelWithDebInfo,MinSizeRel
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -46,16 +52,21 @@ ADD_CUSTOM_TARGET(check
         DEPENDS stl2bmp
         COMMAND stl2bmp ${CMAKE_SOURCE_DIR}/data/torus.stl
         )
-SET(RESOURCE_FILES
-        ${CMAKE_BINARY_DIR}/README.txt ${CMAKE_SOURCE_DIR}/data/torus.stl )
-IF(MSVC)
-        SET(RESOURCE_FILES ${RESOURCE_FILES}
-                ${CMAKE_SOURCE_DIR}/scripts/stl2bmp720.bat
-                ${CMAKE_SOURCE_DIR}/scripts/bmp2png.bat)
+
+IF(PACK_ENABLED)
+        SET(SCRIPT_DIR "${CMAKE_SOURCE_DIR}/scripts")
+        IF(MSVC)
+                INSTALL(FILES ${SCRIPT_DIR}/stl2bmp720.bat ${SCRIPT_DIR}/bmp2png.bat DESTINATION .)
+        ELSE()
+                INSTALL(FILES ${SCRIPT_DIR}/bmp2png.sh DESTINATION .)
+        ENDIF()
+        INSTALL(TARGETS stl2bmp RUNTIME DESTINATION .)
+        INSTALL(FILES ${CMAKE_BINARY_DIR}/README.txt ${CMAKE_SOURCE_DIR}/data/torus.stl  DESTINATION .)
 ELSE()
-        SET(RESOURCE_FILES ${RESOURCE_FILES} ${CMAKE_SOURCE_DIR}/scripts/bmp2png.sh)
+        INSTALL(TARGETS stl2bmp RUNTIME DESTINATION bin)
 ENDIF()
-INSTALL(TARGETS stl2bmp RUNTIME DESTINATION bin)
-INSTALL(FILES ${RESOURCE_FILES} DESTINATION .)
+set (CPACK_PACKAGE_VERSION_MAJOR "${stl2bmp_VERSION_MAJOR}")
+set (CPACK_PACKAGE_VERSION_MINOR "${stl2bmp_VERSION_MINOR}")
+set (CPACK_PACKAGE_VERSION_PATCH "${stl2bmp_VERSION_PATCH}")
 SET(CPACK_GENERATOR "ZIP")
 INCLUDE(CPack)
