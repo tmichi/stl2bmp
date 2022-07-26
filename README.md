@@ -6,9 +6,9 @@
 # Build
 ## Dependencies 
 * C++17 or C++14 + Boost(filesystem)
-* OpenGL 
-* GLFW (3.0 or later)
-* Eigen (3.0 or later)
+* OpenGL
+* GLFW (3.3 or later)
+* Eigen (3.4 or later)
 ## Build with cmake
 ```shell
 % mkdir build    

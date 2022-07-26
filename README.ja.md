@@ -8,7 +8,7 @@
   * C++14では boost::filesystemを使うとうまく行きます。
 * OpenGL
 * glfw (ver. 3.3以上)
-* Eigen (ver. 3.0以上)
+* Eigen (ver. 3.4以上)
 * 以上が入れられるOS (MacOS 12.4 (Monterey), Window 10で確認済み）
 
 glfwとかEigenはhomebrew などで入れておくと楽です。
