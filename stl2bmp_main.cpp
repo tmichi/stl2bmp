@@ -26,48 +26,56 @@ namespace fs = std::filesystem;
 bool fwrite(std::ofstream &fout) {
         return fout.good();
 }
-template <class Head, class... Tail>
-bool fwrite(std::ofstream& fout, Head&& head, Tail&&... tail) {
-        fout.write(reinterpret_cast<const char*>(&head), sizeof(Head));
+
+template<class Head, class... Tail>
+bool fwrite(std::ofstream &fout, Head &&head, Tail &&... tail) {
+        fout.write(reinterpret_cast<const char *>(&head), sizeof(Head));
         return fwrite(fout, std::forward<Tail>(tail)...);
+}
+
+bool fread(std::ifstream &fin) {
+        return fin.good();
+}
+
+template<class Head, class... Tail>
+bool fread(std::ifstream &fin, Head &&head, Tail &&... tail) {
+        fin.read(reinterpret_cast<char *>(&head), sizeof(Head));
+        return fread(fin, std::forward<Tail>(tail)...);
 }
 
 int main(int argc, char **argv) {
         std::cerr << "stl2bmp v." << stl2bmp_VERSION << std::endl;
         try {
                 if (argc < 2) {
-                        throw std::runtime_error("Usage: " + std::string(argv[0]) + " input.stl {dpi:30}");
+                        throw std::runtime_error("Usage: " + std::string(argv[0]) + " input.stl {dpi:360}");
                 }
                 const fs::path input_file{argv[1]};
-                if (!fs::exists(input_file)) {
-                        throw std::runtime_error(input_file.string() + " does not exist");
-                }
                 const fs::path output_dir = input_file.stem();
                 const int dpi = (argc < 3) ? 360 : std::stoi(argv[2]);
+                fs::create_directories(output_dir);
+                if (!fs::exists(output_dir) || !fs::is_directory(output_dir)) {
+                        throw std::runtime_error(output_dir.string() + " cannot be created.");
+                }
                 if (dpi <= 0) {
                         throw std::runtime_error("Invalid DPI : " + std::to_string(dpi));
                 }
                 const double pitch = 25.4 / dpi;
                 const auto ppm = static_cast<int32_t>(std::round(1000.0 / pitch));
-                fs::create_directories(output_dir);
-                if (!fs::exists(output_dir) || !fs::is_directory(output_dir)) {
-                        throw std::runtime_error(output_dir.string() + " cannot be created.");
-                }
                 Eigen::MatrixXf vertices, normals;
                 std::ifstream fin(input_file.string(), std::ios::binary);
                 if (!fin) {
                         throw std::runtime_error(input_file.string() + " open failed");
                 } else {
+                        Eigen::Matrix<float, 3, 4> pbuf;
                         std::array<char, 80> header{};
                         uint32_t nt;
-                        fin.read(header.data(), 80).read(reinterpret_cast<char *>(&nt), 4);
+                        fread(fin, header, nt);
                         vertices.resize(3, nt * 3);
                         normals.resize(3, nt);
                         for (uint32_t i = 0; i < nt; ++i) {
-                                fin.read(reinterpret_cast<char *>(normals.col(i).data()), 12);
-                                fin.read(reinterpret_cast<char *>(vertices.col(i * 3).data()), 12);
-                                fin.read(reinterpret_cast<char *>(vertices.col(i * 3 + 1).data()), 12);
-                                fin.read(reinterpret_cast<char *>(vertices.col(i * 3 + 2).data()), 12);
+                                fread(fin, pbuf);
+                                normals.col(i) = pbuf.col(0);
+                                vertices.block<3, 3>(0, 3 * i) = pbuf.block<3, 3>(0, 1);
                                 fin.seekg(2, std::ios::cur);
                                 if (!fin) {
                                         throw std::runtime_error("STL read failed");
@@ -110,9 +118,8 @@ int main(int argc, char **argv) {
                 }
                 ::glEnd();
                 ::glEndList();
-        
-                //const auto bpl = uint32_t((size.x() + 3 ) / 4 * 4);
                 std::vector<uint8_t> line(static_cast<uint32_t> ((((size.x() + 7) / 8 + 3) / 4) * 4), 0x00);
+                std::vector<uint8_t> buffer(static_cast<uint32_t>(4 * size.x() * size.y()), 0x00); //color buffer
                 for (int z = 0; z < size.z(); ++z) {
                         ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                         ::glMatrixMode(GL_PROJECTION);
@@ -122,7 +129,6 @@ int main(int argc, char **argv) {
                         ::glLoadIdentity();
                         ::glCallList(1);
                         ::glFlush();
-                        std::vector<uint8_t> buffer(static_cast<uint32_t>(4 * size.x() * size.y()), 0x00); //color buffer
                         ::glReadPixels(0, 0, size.x(), size.y(), GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
                         std::stringstream ss;
                         ss << output_dir.string() << "/image" << std::setw(5) << std::setfill('0') << size.z() - 1 - z << ".bmp";
