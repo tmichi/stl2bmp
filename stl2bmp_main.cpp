@@ -83,11 +83,12 @@ int main(int argc, char **argv) {
                                 }
                         }
                 }
-                auto bmin = vertices.rowwise().minCoeff();
-                auto bmax = vertices.rowwise().maxCoeff();
+                Eigen::Vector3f bmin = vertices.rowwise().minCoeff();
+                Eigen::Vector3f bmax = vertices.rowwise().maxCoeff();
                 auto sizes = bmax - bmin;
-                vertices.colwise() -= 0.5f * (bmin + bmax) + Eigen::Vector3f(0, 0, sizes.z());
-                const float zoff = 0.5f * sizes.z();
+                vertices.colwise() -= 0.5f * (bmin + bmax);
+                bmin -= 0.5f * (bmin + bmax);
+                bmax -= 0.5f * (bmin + bmax);
                 const Eigen::Vector3i size = (1.0 / pitch * sizes).array().ceil().cast<int>();
                 if (!::glfwInit()) {
                         throw std::runtime_error("glfwInit() failed");
@@ -123,7 +124,7 @@ int main(int argc, char **argv) {
                         ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                         ::glMatrixMode(GL_PROJECTION);
                         ::glLoadIdentity();
-                        ::glOrtho(bmin.x(), bmax.x(), bmin.y(), bmax.y(), zoff + (z + 0.5) * pitch, zoff + (size.z() + 0.5) * pitch);
+                        ::glOrtho(bmin.x(), bmax.x(), bmin.y(), bmax.y(), bmin.z() + (z + 0.5) * pitch, bmax.z() + 0.01);
                         ::glMatrixMode(GL_MODELVIEW);
                         ::glLoadIdentity();
                         ::glCallList(1);

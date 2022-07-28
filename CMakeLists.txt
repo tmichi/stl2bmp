@@ -41,13 +41,12 @@ ELSEIF(MSVC) #Visual Studio
 ELSE()
         MESSAGE(fatal, "Unknown platform")
 ENDIF(UNIX)
-
+ADD_SUBDIRECTORY(experiments)
 CONFIGURE_FILE(stl2bmp_version.hpp.in stl2bmp_version.hpp)
 CONFIGURE_FILE(README.txt.in README.txt)
 ADD_EXECUTABLE(stl2bmp stl2bmp_main.cpp)
 TARGET_INCLUDE_DIRECTORIES(stl2bmp PRIVATE ${CMAKE_BINARY_DIR})
 TARGET_LINK_LIBRARIES(stl2bmp PRIVATE Eigen3::Eigen glfw OpenGL::GL)
-#TARGET_LINK_LIBRARIES(stl2bmp PRIVATE Eigen3::Eigen glfw OpenGL::GL Boost::filesystem )
 ADD_CUSTOM_TARGET(check
         DEPENDS stl2bmp
         COMMAND stl2bmp ${CMAKE_SOURCE_DIR}/data/torus.stl
