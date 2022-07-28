@@ -1,15 +1,13 @@
 //
 // Created by Takashi Michikawa on 2022/07/28.
 //
+#define _USE_MATH_DEFINES 1
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
 #define NOMINMAX
 #include <windows.h>
 #pragma comment(lib, "opengl32.lib")
 #endif
-#define USE_MATH_DEFINES_
-
-#include <cmath>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -60,7 +58,7 @@ int main(int argc, char **argv) {
                 ::glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE); // disable retina
                 ::glfwWindowHint(GLFW_VISIBLE, 0);
                 
-                for (int k = 100; k < 3000; ++k) {
+                for (int k = 50; k < 3000; ++k) {
                         const Eigen::Vector2i size{k, k};
                         ::GLFWwindow *window = ::glfwCreateWindow(size.x(), size.y(), "offscreen", nullptr, nullptr);
                         if (!window) {
@@ -71,8 +69,8 @@ int main(int argc, char **argv) {
                         ::glEnable(GL_DEPTH_TEST);
                         ::glNewList(1, GL_COMPILE);
                         ::glBegin(GL_TRIANGLES);
+                        ::glColor3f(1, 1, 1);
                         for (int i = 0; i < vertices.cols(); i += 3) {
-                                ::glColor3f(1, 1, 1);
                                 ::glVertex2fv(vertices.col(i).data());
                                 ::glVertex2fv(vertices.col(i + 1).data());
                                 ::glVertex2fv(vertices.col(i + 2).data());
