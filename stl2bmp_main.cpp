@@ -10,16 +10,16 @@
 #pragma comment(lib, "opengl32.lib")
 #endif
 
+#include <iostream>
 #include <fstream>
+#include <sstream>
+#include <filesystem>
 #include <array>
 #include <vector>
 #include <stdexcept>
-#include <sstream>
-#include <iostream>
 #include <GLFW/glfw3.h>
 #include <Eigen/Dense>
 #include <stl2bmp_version.hpp>
-#include <filesystem>
 
 namespace fs = std::filesystem;
 
@@ -45,6 +45,7 @@ bool fread(std::ifstream &fin, Head &&head, Tail &&... tail) {
 
 int main(int argc, char **argv) {
         std::cerr << "stl2bmp v." << stl2bmp_VERSION << std::endl;
+        constexpr std::array<GLfloat, 4> black{0, 0, 0, 1}, white{1, 1, 1, 1};
         try {
                 if (argc < 2) {
                         throw std::runtime_error("Usage: " + std::string(argv[0]) + " input.stl {dpi:360}");
@@ -66,12 +67,12 @@ int main(int argc, char **argv) {
                 if (!fin) {
                         throw std::runtime_error(input_file.string() + " open failed");
                 } else {
-                        Eigen::Matrix<float, 3, 4> pbuf;
                         std::array<char, 80> header{};
                         uint32_t nt;
+                        Eigen::Matrix<float, 3, 4> pbuf;
                         fread(fin, header, nt);
-                        vertices.resize(3, nt * 3);
                         normals.resize(3, nt);
+                        vertices.resize(3, nt * 3);
                         for (uint32_t i = 0; i < nt; ++i) {
                                 fread(fin, pbuf);
                                 normals.col(i) = pbuf.col(0);
@@ -85,11 +86,9 @@ int main(int argc, char **argv) {
                 auto bmin = vertices.rowwise().minCoeff();
                 auto bmax = vertices.rowwise().maxCoeff();
                 auto sizes = bmax - bmin;
-                vertices.colwise() -= 0.5 * (bmin + bmax) + Eigen::Vector3f(0, 0, sizes.z());
+                vertices.colwise() -= 0.5f * (bmin + bmax) + Eigen::Vector3f(0, 0, sizes.z());
                 const float zoff = 0.5f * sizes.z();
                 const Eigen::Vector3i size = (1.0 / pitch * sizes).array().ceil().cast<int>();
-                const GLfloat black[] = {0, 0, 0, 1};
-                const GLfloat white[] = {1, 1, 1, 1};
                 if (!::glfwInit()) {
                         throw std::runtime_error("glfwInit() failed");
                 }
@@ -105,9 +104,9 @@ int main(int argc, char **argv) {
                 ::glEnable(GL_LIGHTING);
                 ::glEnable(GL_LIGHT1);
                 ::glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);
-                ::glLightfv(GL_LIGHT1, GL_AMBIENT, white);
-                ::glMaterialfv(GL_FRONT, GL_AMBIENT, black);
-                ::glMaterialfv(GL_BACK, GL_AMBIENT, white);
+                ::glLightfv(GL_LIGHT1, GL_AMBIENT, white.data());
+                ::glMaterialfv(GL_FRONT, GL_AMBIENT, black.data());
+                ::glMaterialfv(GL_BACK, GL_AMBIENT, white.data());
                 ::glNewList(1, GL_COMPILE);
                 ::glBegin(GL_TRIANGLES);
                 for (int i = 0, j = 0; i < normals.cols(); ++i, j += 3) {
@@ -132,7 +131,7 @@ int main(int argc, char **argv) {
                         ::glReadPixels(0, 0, size.x(), size.y(), GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
                         std::stringstream ss;
                         ss << output_dir.string() << "/image" << std::setw(5) << std::setfill('0') << size.z() - 1 - z << ".bmp";
-                        std::ofstream fout(ss.str(), std::ios::binary);
+                        std::ofstream fout(ss.str(), std::ios::binary); // write to bmp
                         if (!fout) {
                                 throw std::runtime_error(ss.str() + " cannot be open");
                         } else {
