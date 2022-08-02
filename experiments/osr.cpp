@@ -1,9 +1,8 @@
 //
 // Created by Takashi Michikawa on 2022/07/28.
 //
-#define _USE_MATH_DEFINES 1
-
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
+#define _USE_MATH_DEFINES 1
 #define NOMINMAX
 #include <windows.h>
 #pragma comment(lib, "opengl32.lib")
@@ -20,18 +19,15 @@
 
 namespace fs = std::filesystem;
 
-bool fwrite(std::ofstream &fout) {
-        return fout.good();
+namespace mi {
+        void fwrite([[maybe_unused]]std::ofstream &fout) {}
+        
+        template<class Head, class... Tail>
+        void fwrite(std::ofstream &fout, Head &&head, Tail &&... tail) {
+                fout.write(reinterpret_cast<const char *>(&head), sizeof(Head));
+                fwrite(fout, std::forward<Tail>(tail)...);
+        }
 }
-
-template<class Head, class... Tail>
-
-
-bool fwrite(std::ofstream &fout, Head &&head, Tail &&... tail) {
-        fout.write(reinterpret_cast<const char *>(&head), sizeof(Head));
-        return fwrite(fout, std::forward<Tail>(tail)...);
-}
-
 int main() {
         try {
                 fs::path output_dir{"osrtest"};
@@ -50,6 +46,7 @@ int main() {
                         if (!window) {
                                 throw std::runtime_error("glfwCreateWindow() failed");
                         }
+                        ::glViewport(0, 0, k, k);
                         ::glfwMakeContextCurrent(window);
                         ::glClearColor(0, 0, 1, 1);
                         ::glEnable(GL_DEPTH_TEST);
@@ -72,7 +69,7 @@ int main() {
                         ::glLoadIdentity();
                         ::glCallList(1);
                         ::glFlush();
-                        ::glReadPixels(0, 0, k, k, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
+                        ::glReadPixels(0, 0, k, k, GL_RGBA, GL_UNSIGNED_BYTE, &buffer[0]);
                         std::stringstream ss;
                         ss << output_dir.string() << "/image" << std::setw(5) << std::setfill('0') << k << ".bmp";
                         std::ofstream fout(ss.str(), std::ios::binary); // write to bmp
@@ -81,12 +78,12 @@ int main() {
                         } else {
                                 const uint32_t headerSize = 14u + 40u + 2 * 4u;
                                 const uint32_t imageSize = uint32_t(k) * uint32_t(line.size());
-                                fwrite(fout, uint16_t(0x4D42), headerSize + imageSize, uint16_t(0), uint16_t(0), headerSize);
-                                fwrite(fout, uint32_t(40), k, k, uint16_t(1), uint16_t(1), uint32_t(0), imageSize, ppm, ppm, uint32_t(2), uint32_t(0u));
-                                fwrite(fout, uint32_t(0x00000000), uint32_t(0x00ffffff)); //Palette 1
-                                for (uint16_t y = 0; y < k; y++) {
+                                mi::fwrite(fout, uint16_t(0x4D42), headerSize + imageSize, uint16_t(0), uint16_t(0), headerSize);
+                                mi::fwrite(fout, uint32_t(40), k, k, uint16_t(1), uint16_t(1), uint32_t(0), imageSize, ppm, ppm, uint32_t(2), uint32_t(0u));
+                                mi::fwrite(fout, uint32_t(0x00000000), uint32_t(0x00ffffff)); //Palette 1
+                                for (uint16_t y = 0; y < uint16_t(k); y++) {
                                         std::fill(line.begin(), line.end(), 0x00);
-                                        for (uint16_t x = 0; x < k; ++x) {
+                                        for (uint16_t x = 0; x < uint16_t(k); ++x) {
                                                 if (buffer[uint32_t(4 * (x + k * y))] > 0) {
                                                         line[x / 8] |= 0x01 << (7 - x % 8);
                                                 }

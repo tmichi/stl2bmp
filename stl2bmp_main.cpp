@@ -10,6 +10,7 @@
 #pragma comment(lib, "opengl32.lib")
 #endif
 
+#include <tuple>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -17,30 +18,90 @@
 #include <array>
 #include <vector>
 #include <stdexcept>
-#include <GLFW/glfw3.h>
 #include <Eigen/Dense>
 #include <stl2bmp_version.hpp>
 
+#define MI_GL_ENABLED 1
+
+#include "OffScreenRenderer.hpp"
+#include <GLFW/glfw3.h>
+
 namespace fs = std::filesystem;
 
-bool fwrite(std::ofstream &fout) {
-        return fout.good();
-}
-
-template<class Head, class... Tail>
-bool fwrite(std::ofstream &fout, Head &&head, Tail &&... tail) {
-        fout.write(reinterpret_cast<const char *>(&head), sizeof(Head));
-        return fwrite(fout, std::forward<Tail>(tail)...);
-}
-
-bool fread(std::ifstream &fin) {
-        return fin.good();
-}
-
-template<class Head, class... Tail>
-bool fread(std::ifstream &fin, Head &&head, Tail &&... tail) {
-        fin.read(reinterpret_cast<char *>(&head), sizeof(Head));
-        return fread(fin, std::forward<Tail>(tail)...);
+namespace mi {
+        bool fwrite(std::ofstream &fout) {
+                return fout.good();
+        }
+        
+        template<class Head, class... Tail>
+        bool fwrite(std::ofstream &fout, Head &&head, Tail &&... tail) {
+                fout.write(reinterpret_cast<const char *>(&head), sizeof(Head));
+                return fwrite(fout, std::forward<Tail>(tail)...);
+        }
+        
+        template<typename... Args>
+        std::tuple<Args...> fread(std::istream &in) {
+                std::tuple<Args...> result;
+                std::apply([&in](Args &... v) { (in.read(reinterpret_cast<char *>(&v), sizeof(v)), ...); }, result);
+                return result;
+        }
+        
+        std::tuple<Eigen::MatrixXf, Eigen::MatrixXf> parse_stl(const std::filesystem::path &path) {
+                std::ifstream fin(path, std::ios::binary);
+                Eigen::MatrixXf vertices, normals;
+                if (!fin) {
+                        throw std::runtime_error(path.string() + " open failed");
+                }
+                auto [header, nt] = mi::fread<std::array<char, 80>, uint32_t>(fin);
+                if (std::string(header.data()).substr(0, 5) != "solid") {
+                        normals.resize(3, nt);
+                        vertices.resize(3, nt * 3);
+                        for (uint32_t i = 0; i < nt; ++i) {
+                                auto [pbuf] = mi::fread<Eigen::Matrix<float, 3, 4>>(fin);
+                                normals.col(i) = pbuf.col(0);
+                                vertices.block<3, 3>(0, 3 * i) = pbuf.block<3, 3>(0, 1);
+                                fin.seekg(2, std::ios::cur);
+                                if (!fin) {
+                                        throw std::runtime_error("Binary STL read failed");
+                                }
+                        }
+                } else {
+                        fin.seekg(0);
+                        nt = static_cast<uint32_t>(std::count(std::istream_iterator<std::string>(fin), std::istream_iterator<std::string>(), "facet"));
+                        fin.close();
+                        fin.open(path, std::ios::binary);
+                        normals.resize(3, nt);
+                        vertices.resize(3, nt * 3);
+                        auto validate = [&fin](const std::string &valid) {
+                                std::string v;
+                                fin >> v;
+                                if (v != valid) {
+                                        throw std::runtime_error("format error");
+                                }
+                        };
+                        fin.seekg(0);
+                        std::string buffer;
+                        std::getline(fin, buffer);
+                        auto read_vertex = [&validate, &fin](auto &&v) {
+                                validate("vertex");
+                                fin >> v.x() >> v.y() >> v.z();
+                        };
+                        for (uint32_t i = 0; i < nt; ++i) {
+                                validate("facet");
+                                validate("normal");
+                                fin >> normals.col(i).x() >> normals.col(i).y() >> normals.col(i).z();
+                                validate("outer");
+                                validate("loop");
+                                read_vertex(vertices.col(3 * i));
+                                read_vertex(vertices.col(3 * i + 1));
+                                read_vertex(vertices.col(3 * i + 2));
+                                validate("endloop");
+                                validate("endfacet");
+                        }
+                        fin >> buffer;
+                }
+                return {normals, vertices};
+        }
 }
 
 int main(int argc, char **argv) {
@@ -62,33 +123,14 @@ int main(int argc, char **argv) {
                 }
                 const double pitch = 25.4 / dpi;
                 const auto ppm = static_cast<int32_t>(std::round(1000.0 / pitch));
-                Eigen::MatrixXf vertices, normals;
-                std::ifstream fin(input_file.string(), std::ios::binary);
-                if (!fin) {
-                        throw std::runtime_error(input_file.string() + " open failed");
-                } else {
-                        std::array<char, 80> header{};
-                        uint32_t nt;
-                        Eigen::Matrix<float, 3, 4> pbuf;
-                        fread(fin, header, nt);
-                        normals.resize(3, nt);
-                        vertices.resize(3, nt * 3);
-                        for (uint32_t i = 0; i < nt; ++i) {
-                                fread(fin, pbuf);
-                                normals.col(i) = pbuf.col(0);
-                                vertices.block<3, 3>(0, 3 * i) = pbuf.block<3, 3>(0, 1);
-                                fin.seekg(2, std::ios::cur);
-                                if (!fin) {
-                                        throw std::runtime_error("STL read failed");
-                                }
-                        }
-                }
+                auto [normals, vertices] = mi::parse_stl(input_file);
                 Eigen::Vector3f bmin = vertices.rowwise().minCoeff();
                 Eigen::Vector3f bmax = vertices.rowwise().maxCoeff();
-                auto sizes = bmax - bmin;
-                vertices.colwise() -= 0.5f * (bmin + bmax);
-                bmin -= 0.5f * (bmin + bmax);
-                bmax -= 0.5f * (bmin + bmax);
+                const Eigen::Vector3f sizes = bmax - bmin;
+                const Eigen::Vector3f center = 0.5 * (bmin + bmax);
+                vertices.colwise() -= center;
+                bmin -= center;
+                bmax -= center;
                 const Eigen::Vector3i size = (1.0 / pitch * sizes).array().ceil().cast<int>();
                 if (!::glfwInit()) {
                         throw std::runtime_error("glfwInit() failed");
@@ -100,6 +142,12 @@ int main(int argc, char **argv) {
                         throw std::runtime_error("glfwCreateWindow() failed");
                 }
                 ::glfwMakeContextCurrent(window);
+        
+                if (GLenum err = ::glewInit(); err != GLEW_OK) {
+                        throw std::runtime_error(reinterpret_cast<const char *>(::glewGetErrorString(err)));
+                }
+                mi::FrameBufferObject fbo(size.x(), size.y());
+                fbo.activate();
                 ::glClearColor(0, 0, 0, 1);
                 ::glEnable(GL_DEPTH_TEST);
                 ::glEnable(GL_LIGHTING);
@@ -119,7 +167,9 @@ int main(int argc, char **argv) {
                 ::glEnd();
                 ::glEndList();
                 std::vector<uint8_t> line(static_cast<uint32_t> ((((size.x() + 7) / 8 + 3) / 4) * 4), 0x00);
-                std::vector<uint8_t> buffer(static_cast<uint32_t>(4 * size.x() * size.y()), 0x00); //color buffer
+                //std::vector<uint8_t> buffer(static_cast<uint32_t>(4 * size.x() * size.y()), 0x00); //color buffer
+                std::vector<float> buffer(static_cast<uint32_t>(4 * size.x() * size.y()), 0x00); //color buffer
+        
                 for (int z = 0; z < size.z(); ++z) {
                         ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                         ::glMatrixMode(GL_PROJECTION);
@@ -129,7 +179,8 @@ int main(int argc, char **argv) {
                         ::glLoadIdentity();
                         ::glCallList(1);
                         ::glFlush();
-                        ::glReadPixels(0, 0, size.x(), size.y(), GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
+                        fbo.getBuffer(buffer);
+                        //::glReadPixels(0, 0, size.x(), size.y(), GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
                         std::stringstream ss;
                         ss << output_dir.string() << "/image" << std::setw(5) << std::setfill('0') << size.z() - 1 - z << ".bmp";
                         std::ofstream fout(ss.str(), std::ios::binary); // write to bmp
@@ -138,9 +189,9 @@ int main(int argc, char **argv) {
                         } else {
                                 const uint32_t headerSize = 14u + 40u + 2 * 4u;
                                 const uint32_t imageSize = uint32_t(size.y()) * uint32_t(line.size());
-                                fwrite(fout, uint16_t(0x4D42), headerSize + imageSize, uint16_t(0), uint16_t(0), headerSize);
-                                fwrite(fout, uint32_t(40), size.x(), size.y(), uint16_t(1), uint16_t(1), uint32_t(0), imageSize, ppm, ppm, uint32_t(2), uint32_t(0u));
-                                fwrite(fout, uint32_t(0x00000000), uint32_t(0x00ffffff)); //Palette 1
+                                mi::fwrite(fout, uint16_t(0x4D42), headerSize + imageSize, uint16_t(0), uint16_t(0), headerSize);
+                                mi::fwrite(fout, uint32_t(40), size.x(), size.y(), uint16_t(1), uint16_t(1), uint32_t(0), imageSize, ppm, ppm, uint32_t(2), uint32_t(0u));
+                                mi::fwrite(fout, uint32_t(0x00000000), uint32_t(0x00ffffff)); //Palette 1
                                 for (uint16_t y = 0; y < size.y(); y++) {
                                         std::fill(line.begin(), line.end(), 0x00);
                                         for (uint16_t x = 0; x < size.x(); ++x) {
