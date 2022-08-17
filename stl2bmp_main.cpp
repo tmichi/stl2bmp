@@ -28,7 +28,7 @@
 
 namespace fs = std::filesystem;
 
-namespace mi {
+namespace mi_stl2bmp {
         bool fwrite(std::ofstream &fout) {
                 return fout.good();
         }
@@ -52,12 +52,12 @@ namespace mi {
                 if (!fin) {
                         throw std::runtime_error(path.string() + " open failed");
                 }
-                auto [header, nt] = mi::fread<std::array<char, 80>, uint32_t>(fin);
+                auto [header, nt] = mi_stl2bmp::fread<std::array<char, 80>, uint32_t>(fin);
                 if (std::string(header.data()).substr(0, 5) != "solid") {
                         normals.resize(3, nt);
                         vertices.resize(3, nt * 3);
                         for (uint32_t i = 0; i < nt; ++i) {
-                                auto [pbuf] = mi::fread<Eigen::Matrix<float, 3, 4>>(fin);
+                                auto [pbuf] = mi_stl2bmp::fread<Eigen::Matrix<float, 3, 4>>(fin);
                                 normals.col(i) = pbuf.col(0);
                                 vertices.block<3, 3>(0, 3 * i) = pbuf.block<3, 3>(0, 1);
                                 fin.seekg(2, std::ios::cur);
@@ -123,15 +123,21 @@ int main(int argc, char **argv) {
                 }
                 const double pitch = 25.4 / dpi;
                 const auto ppm = static_cast<int32_t>(std::round(1000.0 / pitch));
-                auto [normals, vertices] = mi::parse_stl(input_file);
+                auto [normals, vertices] = mi_stl2bmp::parse_stl(input_file);
                 Eigen::Vector3f bmin = vertices.rowwise().minCoeff();
                 Eigen::Vector3f bmax = vertices.rowwise().maxCoeff();
-                const Eigen::Vector3f sizes = bmax - bmin;
+                Eigen::Vector3f sizes = bmax - bmin;
+                Eigen::Vector3i size = (1.0 / pitch * sizes).array().ceil().cast<int>();
+                size = size.cwiseMax(Eigen::Vector3i{128, 128, 0});                // minimum size is (128, 128)
+                float sz = sizes.z();
+                sizes = pitch * size.cast<float>();
+                sizes.z() = sz;
+                bmax = bmin + sizes;
                 const Eigen::Vector3f center = 0.5 * (bmin + bmax);
                 vertices.colwise() -= center;
                 bmin -= center;
                 bmax -= center;
-                const Eigen::Vector3i size = (1.0 / pitch * sizes).array().ceil().cast<int>();
+        
                 if (!::glfwInit()) {
                         throw std::runtime_error("glfwInit() failed");
                 }
@@ -189,12 +195,12 @@ int main(int argc, char **argv) {
                         } else {
                                 const uint32_t headerSize = 14u + 40u + 2 * 4u;
                                 const uint32_t imageSize = uint32_t(size.y()) * uint32_t(line.size());
-                                mi::fwrite(fout, uint16_t(0x4D42), headerSize + imageSize, uint16_t(0), uint16_t(0), headerSize);
-                                mi::fwrite(fout, uint32_t(40), size.x(), size.y(), uint16_t(1), uint16_t(1), uint32_t(0), imageSize, ppm, ppm, uint32_t(2), uint32_t(0u));
-                                mi::fwrite(fout, uint32_t(0x00000000), uint32_t(0x00ffffff)); //Palette 1
-                                for (uint16_t y = 0; y < size.y(); y++) {
+                                mi_stl2bmp::fwrite(fout, uint16_t(0x4D42), headerSize + imageSize, uint16_t(0), uint16_t(0), headerSize);
+                                mi_stl2bmp::fwrite(fout, uint32_t(40), size.x(), size.y(), uint16_t(1), uint16_t(1), uint32_t(0), imageSize, ppm, ppm, uint32_t(2), uint32_t(0u));
+                                mi_stl2bmp::fwrite(fout, uint32_t(0x00000000), uint32_t(0x00ffffff)); //Palette 1
+                                for (uint16_t y = 0; y < static_cast<uint16_t>(size.y()); y++) {
                                         std::fill(line.begin(), line.end(), 0x00);
-                                        for (uint16_t x = 0; x < size.x(); ++x) {
+                                        for (uint16_t x = 0; x < static_cast<uint16_t>(size.x()); ++x) {
                                                 if (buffer[uint32_t(4 * (x + size.x() * y))] > 0) {
                                                         line[x / 8] |= 0x01 << (7 - x % 8);
                                                 }
@@ -204,7 +210,7 @@ int main(int argc, char **argv) {
                         }
                         std::cerr << "\r" << std::setw(5) << z + 1 << "/" << size.z();
                 }
-                std::cerr << std::endl << "Images(" << size.x() << "x" << size.y() << "," << dpi << "dpi) saved to " << fs::absolute(output_dir) << "." << std::endl;
+                std::cerr << std::endl << size.z() << " images(" << size.x() << "x" << size.y() << "," << dpi << "dpi) saved to " << fs::absolute(output_dir) << "." << std::endl;
                 ::glfwTerminate();
         } catch (std::runtime_error &e) {
                 std::cerr << e.what() << std::endl;

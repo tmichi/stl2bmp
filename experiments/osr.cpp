@@ -19,7 +19,7 @@
 
 namespace fs = std::filesystem;
 
-namespace mi {
+namespace mi_stl2bmp {
         void fwrite([[maybe_unused]]std::ofstream &fout) {}
         
         template<class Head, class... Tail>
@@ -78,9 +78,9 @@ int main() {
                         } else {
                                 const uint32_t headerSize = 14u + 40u + 2 * 4u;
                                 const uint32_t imageSize = uint32_t(k) * uint32_t(line.size());
-                                mi::fwrite(fout, uint16_t(0x4D42), headerSize + imageSize, uint16_t(0), uint16_t(0), headerSize);
-                                mi::fwrite(fout, uint32_t(40), k, k, uint16_t(1), uint16_t(1), uint32_t(0), imageSize, ppm, ppm, uint32_t(2), uint32_t(0u));
-                                mi::fwrite(fout, uint32_t(0x00000000), uint32_t(0x00ffffff)); //Palette 1
+                                mi_stl2bmp::fwrite(fout, uint16_t(0x4D42), headerSize + imageSize, uint16_t(0), uint16_t(0), headerSize);
+                                mi_stl2bmp::fwrite(fout, uint32_t(40), k, k, uint16_t(1), uint16_t(1), uint32_t(0), imageSize, ppm, ppm, uint32_t(2), uint32_t(0u));
+                                mi_stl2bmp::fwrite(fout, uint32_t(0x00000000), uint32_t(0x00ffffff)); //Palette 1
                                 for (uint16_t y = 0; y < uint16_t(k); y++) {
                                         std::fill(line.begin(), line.end(), 0x00);
                                         for (uint16_t x = 0; x < uint16_t(k); ++x) {
