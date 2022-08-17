@@ -1,22 +1,28 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 PROJECT(stl2bmp
-        VERSION 1.0.0
-        DESCRIPTION "Voxelization of binary STL files"
+        VERSION 1.0.1
+        DESCRIPTION "Voxelization of STL files"
         HOMEPAGE_URL https://github.com/tmichi/stl2bmp
         LANGUAGES CXX)
-IF(MSVC)
-        SET(Eigen3_DIR "C:/eigen-3.4.0/cmake")
-        SET(glfw3_DIR "C:/glfw-3.3.7/lib/cmake/glfw3")
-ENDIF (MSVC)
+
 SET(PACK_ENABLED 1)
 SET(CMAKE_BUILD_TYPE Release) #Debug,RelWithDebInfo,MinSizeRel
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 SET(CMAKE_CXX_EXTENSIONS OFF)
+
+IF(MSVC)
+	SET(CMAKE_PREFIX_PATH "C:/glew-2.1.0/lib/cmake/glew")
+        SET(CMAKE_MODULE_PATH "C:/glew-2.1.0/lib/cmake/glew")
+        SET(Eigen3_DIR "C:/eigen-3.4.0/cmake")
+        SET(glfw3_DIR "C:/glfw-3.3.7/lib/cmake/glfw3")
+        SET(GLEW_USE_STATIC_LIBS TRUE)
+ENDIF(MSVC)
+
+FIND_PACKAGE(OpenGL REQUIRED)
 FIND_PACKAGE(Eigen3 3.4 REQUIRED)
 FIND_PACKAGE(glfw3 3.3 REQUIRED)
-FIND_PACKAGE(GLEW 2.0 REQUIRED)
-FIND_PACKAGE(OpenGL REQUIRED)
+FIND_PACKAGE(GLEW)
 IF (UNIX)
         IF (APPLE)
                 SET(CMAKE_MACOSX_RPATH 1)
@@ -35,7 +41,7 @@ IF (UNIX)
                 MESSAGE(fatal, "Unknown platform")
         ENDIF ()
 ELSEIF (MSVC) #Visual Studio
-        #ADD_COMPILE_DEFINITIONS(/wd4244 /wd4819 /wd4127 /wd26495 /wd26451 /wd26812) #disable warnings
+        ADD_COMPILE_DEFINITIONS(/wd4244 /wd4819 /wd4127 /wd26495 /wd26451 /wd26812) #disable warnings
         SET(CMAKE_CXX_FLAGS "/W4 /EHsc")
 ELSE ()
         MESSAGE(fatal, "Unknown platform")
@@ -66,5 +72,5 @@ ENDIF ()
 set(CPACK_PACKAGE_VERSION_MAJOR "${stl2bmp_VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${stl2bmp_VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "${stl2bmp_VERSION_PATCH}")
-SET(CPACK_SOURCE_GENERATOR "ZIP")
+SET(CPACK_GENERATOR "ZIP")
 INCLUDE(CPack)
