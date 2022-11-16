@@ -9,22 +9,18 @@
 #include <windows.h>
 #pragma comment(lib, "opengl32.lib")
 #endif
-
+#define MI_GL_ENABLED 1
+#include "OffScreenRenderer.hpp"
 #include <tuple>
+#include <sstream>
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <filesystem>
 #include <array>
 #include <vector>
 #include <stdexcept>
 #include <Eigen/Dense>
 #include <stl2bmp_version.hpp>
-
-#define MI_GL_ENABLED 1
-
-#include "OffScreenRenderer.hpp"
-#include <GLFW/glfw3.h>
 
 namespace fs = std::filesystem;
 
@@ -76,29 +72,31 @@ namespace mi_stl2bmp {
                                 std::string v;
                                 fin >> v;
                                 if (v != valid) {
-                                        throw std::runtime_error("format error");
+                                        throw std::runtime_error("format error " + valid);
                                 }
+                        };
+                        auto read_triple = [&fin](auto &&v) {
+                                fin >> v.x() >> v.y() >> v.z();
                         };
                         fin.seekg(0);
                         std::string buffer;
-                        std::getline(fin, buffer);
-                        auto read_vertex = [&validate, &fin](auto &&v) {
-                                validate("vertex");
-                                fin >> v.x() >> v.y() >> v.z();
-                        };
+                        validate("solid");
                         for (uint32_t i = 0; i < nt; ++i) {
                                 validate("facet");
                                 validate("normal");
-                                fin >> normals.col(i).x() >> normals.col(i).y() >> normals.col(i).z();
+                                read_triple(normals.col(i));
                                 validate("outer");
                                 validate("loop");
-                                read_vertex(vertices.col(3 * i));
-                                read_vertex(vertices.col(3 * i + 1));
-                                read_vertex(vertices.col(3 * i + 2));
+                                validate("vertex");
+                                read_triple(vertices.col(3 * i));
+                                validate("vertex");
+                                read_triple( vertices.col(3 * i + 1));
+                                validate("vertex");
+                                read_triple(vertices.col(3 * i + 2));
                                 validate("endloop");
                                 validate("endfacet");
                         }
-                        fin >> buffer;
+                        validate("endsolid");
                 }
                 return {normals, vertices};
         }
@@ -121,18 +119,15 @@ int main(int argc, char **argv) {
                 if (dpi <= 0) {
                         throw std::runtime_error("Invalid DPI : " + std::to_string(dpi));
                 }
-                const double pitch = 25.4 / dpi;
-                const auto ppm = static_cast<int32_t>(std::round(1000.0 / pitch));
+                const float pitch = 25.4f/ dpi;
+                const auto ppm = static_cast<int32_t>(std::round(1000.0f / pitch));
+                
                 auto [normals, vertices] = mi_stl2bmp::parse_stl(input_file);
                 Eigen::Vector3f bmin = vertices.rowwise().minCoeff();
                 Eigen::Vector3f bmax = vertices.rowwise().maxCoeff();
+                bmax = bmax.cwiseMax(bmin + Eigen::Vector3f{128 * pitch, 128 * pitch , 0});
                 Eigen::Vector3f sizes = bmax - bmin;
-                Eigen::Vector3i size = (1.0 / pitch * sizes).array().ceil().cast<int>();
-                size = size.cwiseMax(Eigen::Vector3i{128, 128, 0});                // minimum size is (128, 128)
-                float sz = sizes.z();
-                sizes = pitch * size.cast<float>();
-                sizes.z() = sz;
-                bmax = bmin + sizes;
+                Eigen::Vector3i size = (1.0f / pitch * sizes).array().ceil().cast<int>();
                 const Eigen::Vector3f center = 0.5 * (bmin + bmax);
                 vertices.colwise() -= center;
                 bmin -= center;
@@ -188,7 +183,7 @@ int main(int argc, char **argv) {
                         fbo.getBuffer(buffer);
                         //::glReadPixels(0, 0, size.x(), size.y(), GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
                         std::stringstream ss;
-                        ss << output_dir.string() << "/image" << std::setw(5) << std::setfill('0') << size.z() - 1 - z << ".bmp";
+                        ss << output_dir.string() << "/image" << std::setw(4) << std::setfill('0') << size.z() - 1 - z << ".bmp";
                         std::ofstream fout(ss.str(), std::ios::binary); // write to bmp
                         if (!fout) {
                                 throw std::runtime_error(ss.str() + " cannot be open");
