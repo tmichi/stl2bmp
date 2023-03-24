@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 PROJECT(stl2bmp
-        VERSION 1.0.1
+        VERSION 1.1.0
         DESCRIPTION "Voxelization of STL files"
         HOMEPAGE_URL https://github.com/tmichi/stl2bmp
         LANGUAGES CXX)
@@ -12,7 +12,6 @@ SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 SET(CMAKE_CXX_EXTENSIONS OFF)
 
 IF (MSVC)
-    SET(CMAKE_PREFIX_PATH "C:/glew-2.1.0/lib/cmake/glew")
     SET(CMAKE_MODULE_PATH "C:/glew-2.1.0/lib/cmake/glew")
     SET(Eigen3_DIR "C:/eigen-3.4.0/cmake")
     SET(glfw3_DIR "C:/glfw-3.3.7/lib/cmake/glfw3")
@@ -46,7 +45,6 @@ ELSEIF (MSVC) #Visual Studio
 ELSE ()
     MESSAGE(fatal, "Unknown platform")
 ENDIF (UNIX)
-ADD_SUBDIRECTORY(experiments)
 CONFIGURE_FILE(stl2bmp_version.hpp.in stl2bmp_version.hpp)
 CONFIGURE_FILE(README.txt.in README.txt)
 ADD_EXECUTABLE(stl2bmp stl2bmp_main.cpp OffScreenRenderer.hpp)
@@ -55,7 +53,7 @@ TARGET_LINK_LIBRARIES(stl2bmp PRIVATE Eigen3::Eigen glfw OpenGL::GL GLEW::GLEW)
 
 ADD_CUSTOM_TARGET(check
         DEPENDS stl2bmp
-        COMMAND stl2bmp ${CMAKE_SOURCE_DIR}/data/torus.stl 14400
+        COMMAND stl2bmp ${CMAKE_SOURCE_DIR}/data/torus.stl 3600
         )
 
 IF (PACK_ENABLED)
@@ -69,9 +67,10 @@ IF (PACK_ENABLED)
     INSTALL(FILES ${CMAKE_BINARY_DIR}/README.txt ${CMAKE_SOURCE_DIR}/data/torus.stl DESTINATION .)
 ELSE ()
     INSTALL(TARGETS stl2bmp RUNTIME DESTINATION bin)
+    SET(CPACK_GENERATOR "ZIP")
 ENDIF ()
-set(CPACK_PACKAGE_VERSION_MAJOR "${stl2bmp_VERSION_MAJOR}")
-set(CPACK_PACKAGE_VERSION_MINOR "${stl2bmp_VERSION_MINOR}")
-set(CPACK_PACKAGE_VERSION_PATCH "${stl2bmp_VERSION_PATCH}")
-SET(CPACK_GENERATOR "ZIP")
+set(CPACK_SOURCE_GENERATOR "TGZ")
+set(CPACK_SOURCE_IGNORE_FILES "cmake-build-release" ".git" ".idea")
+set(CPACK_SOURCE_PACKAGE_FILE_NAME ${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION})
+set(CPACK_PACKAGE_FILE_NAME ${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION})
 INCLUDE(CPack)
