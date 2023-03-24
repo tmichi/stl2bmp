@@ -113,6 +113,9 @@ int main(int argc, char **argv) {
                         throw std::runtime_error("Usage: " + std::string(argv[0]) + " input.stl {dpi:360}");
                 }
                 const fs::path input_file{argv[1]};
+                if (!fs::exists(input_file)) {
+                        throw std::runtime_error(input_file.string() + " file not found");
+                }
                 const fs::path output_dir = input_file.stem();
                 const int dpi = (argc < 3) ? 360 : std::stoi(argv[2]);
                 fs::create_directories(output_dir);
