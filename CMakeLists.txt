@@ -54,7 +54,7 @@ TARGET_INCLUDE_DIRECTORIES(stl2bmp PRIVATE ${CMAKE_BINARY_DIR} .)
 TARGET_LINK_LIBRARIES(stl2bmp PRIVATE Eigen3::Eigen glfw OpenGL::GL GLEW::GLEW)
 ADD_CUSTOM_TARGET(check
         DEPENDS stl2bmp
-        COMMAND stl2bmp ${CMAKE_SOURCE_DIR}/data/torus.stl
+        COMMAND stl2bmp ${CMAKE_SOURCE_DIR}/data/torus.stl 7200
         )
 
 IF (PACK_ENABLED)

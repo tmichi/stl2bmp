@@ -7,6 +7,7 @@
 #include <windows.h>
 #pragma comment(lib, "opengl32.lib")
 #endif
+
 #include <cmath>
 #include <iostream>
 #include <fstream>
@@ -15,6 +16,10 @@
 #include <array>
 #include <vector>
 #include <stdexcept>
+
+#define MI_GL_ENABLED
+
+#include "../OffScreenRenderer.hpp"
 #include <GLFW/glfw3.h>
 
 namespace fs = std::filesystem;
@@ -46,7 +51,19 @@ int main() {
                         if (!window) {
                                 throw std::runtime_error("glfwCreateWindow() failed");
                         }
-                        ::glViewport(0, 0, k, k);
+                        ::glfwMakeContextCurrent(window);
+        
+                        if (GLenum err = ::glewInit(); err != GLEW_OK) {
+                                throw std::runtime_error(reinterpret_cast<const char *>(::glewGetErrorString(err)));
+                        }
+        
+                        mi::FrameBufferObject fbo(k, k);
+                        fbo.activate();
+        
+                        int w, h;
+                        glfwGetFramebufferSize(window, &w, &h);
+                        glViewport(0, 0, k, k);
+                        std::cerr << w << " " << h << " " << k << std::endl;
                         ::glfwMakeContextCurrent(window);
                         ::glClearColor(0, 0, 1, 1);
                         ::glEnable(GL_DEPTH_TEST);
@@ -59,8 +76,9 @@ int main() {
                         ::glEnd();
                         ::glEndList();
                         std::vector<uint8_t> line(static_cast<uint32_t> ((((k + 7) / 8 + 3) / 4) * 4), 0x00);
-                        std::vector<uint8_t> buffer(static_cast<uint32_t>(4 * k * k), 0x00); //color buffer
-                        
+                        //std::vector<uint8_t> buffer(static_cast<uint32_t>(4 * k * k), 0x00); //color buffer
+                        std::vector<float> buffer(static_cast<uint32_t>(4 * k * k), 0); //color buffer
+        
                         ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                         ::glMatrixMode(GL_PROJECTION);
                         ::glLoadIdentity();
@@ -69,7 +87,8 @@ int main() {
                         ::glLoadIdentity();
                         ::glCallList(1);
                         ::glFlush();
-                        ::glReadPixels(0, 0, k, k, GL_RGBA, GL_UNSIGNED_BYTE, &buffer[0]);
+                        fbo.getBuffer(buffer);
+                        //::glReadPixels(0, 0, k, k, GL_RGBA, GL_UNSIGNED_BYTE, &buffer[0]);
                         std::stringstream ss;
                         ss << output_dir.string() << "/image" << std::setw(5) << std::setfill('0') << k << ".bmp";
                         std::ofstream fout(ss.str(), std::ios::binary); // write to bmp

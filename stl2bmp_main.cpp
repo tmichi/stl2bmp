@@ -119,19 +119,20 @@ int main(int argc, char **argv) {
                 if (dpi <= 0) {
                         throw std::runtime_error("Invalid DPI : " + std::to_string(dpi));
                 }
-                const float pitch = 25.4f/ dpi;
+                const float pitch = 25.4f / static_cast<float>(dpi); // 1inch = 25.4 mm
                 const auto ppm = static_cast<int32_t>(std::round(1000.0f / pitch));
-                
+        
                 auto [normals, vertices] = mi_stl2bmp::parse_stl(input_file);
                 Eigen::Vector3f bmin = vertices.rowwise().minCoeff();
                 Eigen::Vector3f bmax = vertices.rowwise().maxCoeff();
-                bmax = bmax.cwiseMax(bmin + Eigen::Vector3f{128 * pitch, 128 * pitch , 0});
+                bmax = bmax.cwiseMax(bmin + Eigen::Vector3f{128 * pitch, 128 * pitch, 0});
                 Eigen::Vector3f sizes = bmax - bmin;
                 Eigen::Vector3i size = (1.0f / pitch * sizes).array().ceil().cast<int>();
                 const Eigen::Vector3f center = 0.5 * (bmin + bmax);
                 vertices.colwise() -= center;
                 bmin -= center;
                 bmax -= center;
+        
         
                 if (!::glfwInit()) {
                         throw std::runtime_error("glfwInit() failed");
@@ -169,7 +170,7 @@ int main(int argc, char **argv) {
                 ::glEndList();
                 std::vector<uint8_t> line(static_cast<uint32_t> ((((size.x() + 7) / 8 + 3) / 4) * 4), 0x00);
                 //std::vector<uint8_t> buffer(static_cast<uint32_t>(4 * size.x() * size.y()), 0x00); //color buffer
-                std::vector<float> buffer(static_cast<uint32_t>(4 * size.x() * size.y()), 0x00); //color buffer
+                std::vector<float> buffer(static_cast<uint32_t>(4 * size.x() * size.y()), 0); //color buffer
         
                 for (int z = 0; z < size.z(); ++z) {
                         ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -181,7 +182,6 @@ int main(int argc, char **argv) {
                         ::glCallList(1);
                         ::glFlush();
                         fbo.getBuffer(buffer);
-                        //::glReadPixels(0, 0, size.x(), size.y(), GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
                         std::stringstream ss;
                         ss << output_dir.string() << "/image" << std::setw(4) << std::setfill('0') << size.z() - 1 - z << ".bmp";
                         std::ofstream fout(ss.str(), std::ios::binary); // write to bmp
@@ -207,6 +207,7 @@ int main(int argc, char **argv) {
                 }
                 std::cerr << std::endl << size.z() << " images(" << size.x() << "x" << size.y() << "," << dpi << "dpi) saved to " << fs::absolute(output_dir) << "." << std::endl;
                 ::glfwTerminate();
+        
         } catch (std::runtime_error &e) {
                 std::cerr << e.what() << std::endl;
         } catch (...) {
