@@ -2,10 +2,10 @@
 ![teaser image](images/overview.png)
 * stl2bmp voxelizes (descretizes) STL files as stacked 1bit bitmap images. 
 * The user can control pixel resolution by DPI.
-* Speed is reasonably fast by using OpenGL Frame buffer object.
+* Computation is reasonably fast by using OpenGL Frame buffer object.
 # Build
 ## Dependencies 
-* C++17 or C++14 + Boost(filesystem)
+* C++17 
 * OpenGL
 * GLEW (2.0 or later)
 * GLFW (3.3 or later)
