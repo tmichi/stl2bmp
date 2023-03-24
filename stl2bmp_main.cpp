@@ -4,7 +4,7 @@
  * @author Takashi Michikawa <peppery-eternal.0b@icloud.com> RIKEN Center for Advanced Photonics
  * MIT License (See LICENSE.txt).
  */
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
+#if defined(_WIN32)
 #define NOMINMAX
 #include <windows.h>
 #pragma comment(lib, "opengl32.lib")
@@ -50,6 +50,7 @@ namespace mi_stl2bmp {
                 }
                 auto [header, nt] = mi_stl2bmp::fread<std::array<char, 80>, uint32_t>(fin);
                 if (std::string(header.data()).substr(0, 5) != "solid") {
+                        // ASCII format
                         normals.resize(3, nt);
                         vertices.resize(3, nt * 3);
                         for (uint32_t i = 0; i < nt; ++i) {
@@ -62,6 +63,7 @@ namespace mi_stl2bmp {
                                 }
                         }
                 } else {
+                        // Binary format
                         fin.seekg(0);
                         nt = static_cast<uint32_t>(std::count(std::istream_iterator<std::string>(fin), std::istream_iterator<std::string>(), "facet"));
                         fin.close();
@@ -98,6 +100,7 @@ namespace mi_stl2bmp {
                         }
                         validate("endsolid");
                 }
+
                 return {normals, vertices};
         }
 }
@@ -123,17 +126,17 @@ int main(int argc, char **argv) {
                 const auto ppm = static_cast<int32_t>(std::round(1000.0f / pitch));
         
                 auto [normals, vertices] = mi_stl2bmp::parse_stl(input_file);
+                //normalize
                 Eigen::Vector3f bmin = vertices.rowwise().minCoeff();
                 Eigen::Vector3f bmax = vertices.rowwise().maxCoeff();
-                bmax = bmax.cwiseMax(bmin + Eigen::Vector3f{128 * pitch, 128 * pitch, 0});
+                bmax = bmax.cwiseMax(bmin + Eigen::Vector3f{128 * pitch, 128 * pitch, 0}); // min size (128x128)
                 Eigen::Vector3f sizes = bmax - bmin;
                 Eigen::Vector3i size = (1.0f / pitch * sizes).array().ceil().cast<int>();
                 const Eigen::Vector3f center = 0.5 * (bmin + bmax);
                 vertices.colwise() -= center;
                 bmin -= center;
                 bmax -= center;
-        
-        
+
                 if (!::glfwInit()) {
                         throw std::runtime_error("glfwInit() failed");
                 }
@@ -151,18 +154,20 @@ int main(int argc, char **argv) {
                 }
                 mi::FrameBufferObject fbo(size.x(), size.y());
                 fbo.activate();
-                glViewport(0, 0, size.x(), size.y());
+                ::glViewport(0, 0, size.x(), size.y());
                 ::glClearColor(0, 0, 0, 1);
                 ::glEnable(GL_DEPTH_TEST);
+
                 ::glEnable(GL_LIGHTING);
                 ::glEnable(GL_LIGHT1);
                 ::glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);
                 ::glLightfv(GL_LIGHT1, GL_AMBIENT, white.data());
                 ::glMaterialfv(GL_FRONT, GL_AMBIENT, black.data());
                 ::glMaterialfv(GL_BACK, GL_AMBIENT, white.data());
+
+                //Draw triangles.
                 ::glNewList(1, GL_COMPILE);
                 ::glBegin(GL_TRIANGLES);
-        
                 for (int i = 0, j = 0; i < normals.cols(); ++i, j += 3) {
                         ::glNormal3fv(normals.col(i).data());
                         ::glVertex3fv(vertices.col(j).data());
@@ -184,10 +189,11 @@ int main(int argc, char **argv) {
                         ::glLoadIdentity();
                         ::glCallList(1);
                         ::glFlush();
+
                         fbo.getBuffer(buffer);
         
                         std::stringstream ss;
-                        ss << output_dir.string() << "/image" << std::setw(4) << std::setfill('0') << size.z() - 1 - z << ".bmp";
+                        ss << output_dir.string() << "/image" << std::setw(5) << std::setfill('0') << size.z() - 1 - z << ".bmp";
                         std::ofstream fout(ss.str(), std::ios::binary); // write to bmp
                         if (!fout) {
                                 throw std::runtime_error(ss.str() + " cannot be open");
@@ -209,7 +215,8 @@ int main(int argc, char **argv) {
                         }
                         std::cerr << "\r" << std::setw(5) << z + 1 << "/" << size.z();
                 }
-                std::cerr << std::endl << size.z() << " images(" << size.x() << "x" << size.y() << "," << dpi << "dpi) saved to " << fs::absolute(output_dir) << "." << std::endl;
+                std::cerr << std::endl
+                          << size.z() << " images(" << size.x() << "x" << size.y() << "," << dpi << "dpi) saved to " << fs::absolute(output_dir) << "." << std::endl;
                 ::glfwTerminate();
         } catch (std::runtime_error &e) {
                 std::cerr << e.what() << std::endl;
