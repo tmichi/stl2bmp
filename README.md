@@ -7,7 +7,6 @@
 ## Dependencies 
 * C++17 
 * OpenGL
-* GLEW (2.0 or later)
 * GLFW (3.3 or later)
 * Eigen (3.4 or later)
 ## Build with cmake
