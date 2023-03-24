@@ -139,10 +139,11 @@ int main(int argc, char **argv) {
                 }
                 ::glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE); // disable retina
                 ::glfwWindowHint(GLFW_VISIBLE, 0);
-                ::GLFWwindow *window = ::glfwCreateWindow(size.x(), size.y(), "offscreen", nullptr, nullptr);
+                ::GLFWwindow *window = ::glfwCreateWindow(128, 128, "offscreen", nullptr, nullptr);
                 if (!window) {
                         throw std::runtime_error("glfwCreateWindow() failed");
                 }
+        
                 ::glfwMakeContextCurrent(window);
         
                 if (GLenum err = ::glewInit(); err != GLEW_OK) {
@@ -150,6 +151,7 @@ int main(int argc, char **argv) {
                 }
                 mi::FrameBufferObject fbo(size.x(), size.y());
                 fbo.activate();
+                glViewport(0, 0, size.x(), size.y());
                 ::glClearColor(0, 0, 0, 1);
                 ::glEnable(GL_DEPTH_TEST);
                 ::glEnable(GL_LIGHTING);
@@ -160,6 +162,7 @@ int main(int argc, char **argv) {
                 ::glMaterialfv(GL_BACK, GL_AMBIENT, white.data());
                 ::glNewList(1, GL_COMPILE);
                 ::glBegin(GL_TRIANGLES);
+        
                 for (int i = 0, j = 0; i < normals.cols(); ++i, j += 3) {
                         ::glNormal3fv(normals.col(i).data());
                         ::glVertex3fv(vertices.col(j).data());
@@ -168,20 +171,21 @@ int main(int argc, char **argv) {
                 }
                 ::glEnd();
                 ::glEndList();
-                std::vector<uint8_t> line(static_cast<uint32_t> ((((size.x() + 7) / 8 + 3) / 4) * 4), 0x00);
-                //std::vector<uint8_t> buffer(static_cast<uint32_t>(4 * size.x() * size.y()), 0x00); //color buffer
-                std::vector<float> buffer(static_cast<uint32_t>(4 * size.x() * size.y()), 0); //color buffer
         
+                std::vector<uint8_t> line(static_cast<uint32_t> ((((size.x() + 7) / 8 + 3) / 4) * 4), 0x00);
+                std::vector<float> buffer(static_cast<uint32_t>(4 * size.x() * size.y()), 0); //color buffer
                 for (int z = 0; z < size.z(); ++z) {
                         ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                         ::glMatrixMode(GL_PROJECTION);
                         ::glLoadIdentity();
                         ::glOrtho(bmin.x(), bmax.x(), bmin.y(), bmax.y(), bmin.z() + (z + 0.5) * pitch, bmax.z() + 0.01);
+        
                         ::glMatrixMode(GL_MODELVIEW);
                         ::glLoadIdentity();
                         ::glCallList(1);
                         ::glFlush();
                         fbo.getBuffer(buffer);
+        
                         std::stringstream ss;
                         ss << output_dir.string() << "/image" << std::setw(4) << std::setfill('0') << size.z() - 1 - z << ".bmp";
                         std::ofstream fout(ss.str(), std::ios::binary); // write to bmp
@@ -207,7 +211,6 @@ int main(int argc, char **argv) {
                 }
                 std::cerr << std::endl << size.z() << " images(" << size.x() << "x" << size.y() << "," << dpi << "dpi) saved to " << fs::absolute(output_dir) << "." << std::endl;
                 ::glfwTerminate();
-        
         } catch (std::runtime_error &e) {
                 std::cerr << e.what() << std::endl;
         } catch (...) {
