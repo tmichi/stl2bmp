@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.15)
 PROJECT(stl2bmp
         VERSION 1.1.0
         DESCRIPTION "Voxelization of STL files"
@@ -12,16 +12,17 @@ SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 SET(CMAKE_CXX_EXTENSIONS OFF)
 
 IF (MSVC)
-    SET(CMAKE_MODULE_PATH "C:/glew-2.1.0/lib/cmake/glew")
     SET(Eigen3_DIR "C:/eigen-3.4.0/cmake")
     SET(glfw3_DIR "C:/glfw-3.3.7/lib/cmake/glfw3")
+    SET(GLEW_ROOT "C:/glew-2.1.0")
     SET(GLEW_USE_STATIC_LIBS TRUE)
 ENDIF (MSVC)
 
 FIND_PACKAGE(OpenGL REQUIRED)
 FIND_PACKAGE(Eigen3 3.4 REQUIRED)
 FIND_PACKAGE(glfw3 3.3 REQUIRED)
-FIND_PACKAGE(GLEW 2.0 REQUIRED)
+FIND_PACKAGE(GLEW REQUIRED)
+
 IF (UNIX)
     IF (APPLE)
         SET(CMAKE_MACOSX_RPATH 1)
@@ -50,10 +51,12 @@ CONFIGURE_FILE(README.txt.in README.txt)
 ADD_EXECUTABLE(stl2bmp stl2bmp_main.cpp OffScreenRenderer.hpp)
 TARGET_INCLUDE_DIRECTORIES(stl2bmp PRIVATE ${CMAKE_BINARY_DIR} .)
 TARGET_LINK_LIBRARIES(stl2bmp PRIVATE Eigen3::Eigen glfw OpenGL::GL GLEW::GLEW)
-
+#make check test programs with different DPIs
 ADD_CUSTOM_TARGET(check
         DEPENDS stl2bmp
-        COMMAND stl2bmp ${CMAKE_SOURCE_DIR}/data/torus.stl 3600
+        COMMAND stl2bmp ${CMAKE_SOURCE_DIR}/data/torus.stl
+        COMMAND stl2bmp ${CMAKE_SOURCE_DIR}/data/torus.stl 14400
+        COMMAND stl2bmp ${CMAKE_SOURCE_DIR}/data/torus.stl 180
         )
 
 IF (PACK_ENABLED)
