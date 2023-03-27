@@ -7,4 +7,4 @@ Usage :
  $ stl2bmp input.stl {dpi}
       - input.stl Input STL file (Binary only).
       - dpi DPI of the images. Default value is 360 (dpi)
-      - Output : input/image?????.bmp  (1bit BMP file)
+      - Output : input{dpi}/image?????.bmp  (1bit BMP file)

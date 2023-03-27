@@ -8,7 +8,7 @@
 * C++17 
 * OpenGL
 * GLFW (3.3 or later)
-* GLEQ (2.1 or later)
+* GLEW (2.1 or later)
 * Eigen (3.4 or later)
 ## Build with cmake
 ```shell
@@ -42,7 +42,7 @@ It carefully sets a clipping plane so that the near plane corresponds to the sam
 When the background colors, front face color and back face color are assigned to black, black and white respectively, the rendered images will be voxelized image of the sampling plane. 
 By changing the distance of near clipping plane, we can obtain voxelized images of the mesh. 
 We suppose that the input mesh is closed and clean ( no skiny triangles). You may need repair meshes created by some softwares (e.g. Polymender, Meshlab).
-![Principle](images/principle.pngj)
+![Principle](images/principle.png)
 # Notes
  * Minimum size of image is 128x128. 
 # License
