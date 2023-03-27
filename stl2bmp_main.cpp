@@ -50,7 +50,7 @@ namespace mi_stl2bmp {
                 }
                 auto [header, nt] = mi_stl2bmp::fread<std::array<char, 80>, uint32_t>(fin);
                 if (std::string(header.data()).substr(0, 5) != "solid") {
-                        // ASCII format
+                        // Binary format
                         normals.resize(3, nt);
                         vertices.resize(3, nt * 3);
                         for (uint32_t i = 0; i < nt; ++i) {
@@ -63,7 +63,7 @@ namespace mi_stl2bmp {
                                 }
                         }
                 } else {
-                        // Binary format
+                        // ASCII format
                         fin.seekg(0);
                         nt = static_cast<uint32_t>(std::count(std::istream_iterator<std::string>(fin), std::istream_iterator<std::string>(), "facet"));
                         fin.close();
