@@ -116,8 +116,9 @@ int main(int argc, char **argv) {
                 if (!fs::exists(input_file)) {
                         throw std::runtime_error(input_file.string() + " file not found");
                 }
-                const fs::path output_dir = input_file.stem();
                 const int dpi = (argc < 3) ? 360 : std::stoi(argv[2]);
+
+                const fs::path output_dir = input_file.stem().string() + std::to_string(dpi);
                 fs::create_directories(output_dir);
                 if (!fs::exists(output_dir) || !fs::is_directory(output_dir)) {
                         throw std::runtime_error(output_dir.string() + " cannot be created.");

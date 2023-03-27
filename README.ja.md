@@ -7,7 +7,7 @@
 * C++17をサポートしたコンパイラ(gcc, clang, visual studio 他)
   * C++14では boost::filesystemを使うとうまく行きます。
 * OpenGL
-* GLEW
+* GLEW (ver. 2.0以上)
 * glfw (ver. 3.3以上)
 * Eigen (ver. 3.4以上)
 * 以上が入れられるOS (MacOS 12.4 (Monterey), Window 10で確認済み）
@@ -26,6 +26,7 @@ glfwとかEigenはhomebrew などで入れておくと楽です。
 * CMakeLists.txtに以下の変数を追加 
   * ``Eigen3_DIR`` : Eigen3Config.cmakeがあるところ　（例: ``SET(Eigen3_DIR "C:/Program Files (x86)/Eigen3/share/eigen3/cmake")``)
   * ``glfw_DIR`` : glfw3Config.cmakeがあるところ（例 ``SET(glfw_DIR "C:/glfw-3.3.7/lib/cmake/glfw3")``)
+  * ``GLEW_ROOT`` : glewのルート
 * CMakeでVSソリューションファイルを作って、Visual Studioでビルドする
 #Linux
 ## 手動でコンパイル
