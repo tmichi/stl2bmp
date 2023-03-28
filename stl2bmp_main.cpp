@@ -113,12 +113,10 @@ namespace mi_stl2bmp {
                                 read_triple(normals.col(i));
                                 validate("outer");
                                 validate("loop");
-                                validate("vertex");
-                                read_triple(vertices.col(3 * i));
-                                validate("vertex");
-                                read_triple( vertices.col(3 * i + 1));
-                                validate("vertex");
-                                read_triple(vertices.col(3 * i + 2));
+                                for (uint32_t j = 0; j < 3; ++j) {
+                                        validate("vertex");
+                                        read_triple(vertices.col(3 * i + j));
+                                }
                                 validate("endloop");
                                 validate("endfacet");
                         }
@@ -205,12 +203,14 @@ int main(int argc, char **argv) {
         
                 std::vector<uint8_t> line(static_cast<uint32_t> ((((size.x() + 7) / 8 + 3) / 4) * 4), 0x00);
                 std::vector<float> buffer(static_cast<uint32_t>(4 * size.x() * size.y()), 0); //color buffer
+                const uint32_t headerSize = 14u + 40u + 2 * 4u;
+                const uint32_t imageSize = uint32_t(size.y()) * uint32_t(line.size());
                 for (int z = 0; z < size.z(); ++z) {
                         ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                         ::glMatrixMode(GL_PROJECTION);
                         ::glLoadIdentity();
                         ::glOrtho(bmin.x(), bmax.x(), bmin.y(), bmax.y(), bmin.z() + (z + 0.5) * pitch, bmax.z() + 0.01);
-        
+                
                         ::glMatrixMode(GL_MODELVIEW);
                         ::glLoadIdentity();
                         ::glCallList(1);
@@ -224,8 +224,6 @@ int main(int argc, char **argv) {
                         if (!fout) {
                                 throw std::runtime_error(ss.str() + " cannot be open");
                         } else {
-                                const uint32_t headerSize = 14u + 40u + 2 * 4u;
-                                const uint32_t imageSize = uint32_t(size.y()) * uint32_t(line.size());
                                 mi_stl2bmp::fwrite(fout, uint16_t(0x4D42), headerSize + imageSize, uint16_t(0), uint16_t(0), headerSize);
                                 mi_stl2bmp::fwrite(fout, uint32_t(40), size.x(), size.y(), uint16_t(1), uint16_t(1), uint32_t(0), imageSize, ppm, ppm, uint32_t(2), uint32_t(0u));
                                 mi_stl2bmp::fwrite(fout, uint32_t(0x00000000), uint32_t(0x00ffffff)); //Palette 1
@@ -239,7 +237,7 @@ int main(int argc, char **argv) {
                                         fout.write(reinterpret_cast<char *>(line.data()), std::streamsize(line.size()));
                                 }
                         }
-                        std::cerr << "\r" << std::setw(std::to_string(size.z()).length()) << z + 1 << "/" << size.z();
+                        std::cerr << "\r" << std::setw(int(std::to_string(size.z()).length())) << z + 1 << "/" << size.z();
                 }
                 std::cerr << std::endl
                           << size.z() << " images(" << size.x() << "x" << size.y() << "," << dpi << "dpi) saved to " << fs::absolute(output_dir) << "." << std::endl;
