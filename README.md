@@ -10,6 +10,8 @@
 * GLFW (3.3 or later)
 * GLEW (2.1 or later)
 * Eigen (3.4 or later)
+
+I have confirmed that it works on Mac (Ventura), Windows 10, and Linux (Ubuntu 22.04).
 ## Build with cmake
 ```shell
 % mkdir build    
