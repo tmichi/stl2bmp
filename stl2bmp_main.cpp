@@ -25,26 +25,49 @@
 namespace fs = std::filesystem;
 
 namespace mi_stl2bmp {
+        /**
+         * @brief Write data to file.
+         * @param fout  Output file stream.
+         * @return True if success.
+         */
         bool fwrite(std::ofstream &fout) {
                 return fout.good();
         }
-        
+        /**
+         * @brief Write data to file.
+         * @tparam Head  Type of the first argument.
+         * @tparam Tail Types of the rest arguments.
+         * @param fout  Output file stream.
+         * @param head First argument.
+         * @param tail Last arguments.
+         * @return True if success.
+         */
         template<class Head, class... Tail>
         bool fwrite(std::ofstream &fout, Head &&head, Tail &&... tail) {
                 fout.write(reinterpret_cast<const char *>(&head), sizeof(Head));
                 return fwrite(fout, std::forward<Tail>(tail)...);
         }
-        
+        /**
+         * @brief Read data from file.
+         * @tparam Args  Types of the arguments.
+         * @param in  Input file stream.
+         * @return Tuple of the arguments.
+         */
         template<typename... Args>
         std::tuple<Args...> fread(std::istream &in) {
                 std::tuple<Args...> result;
                 std::apply([&in](Args &... v) { (in.read(reinterpret_cast<char *>(&v), sizeof(v)), ...); }, result);
                 return result;
         }
-        
+        /**
+         * @brief Read STL data from file.
+         * @param path  Path to STL file.
+         * @return  Tuple of normals and vertices.
+         */
         std::tuple<Eigen::MatrixXf, Eigen::MatrixXf> parse_stl(const std::filesystem::path &path) {
-                std::ifstream fin(path, std::ios::binary);
                 Eigen::MatrixXf vertices, normals;
+
+                std::ifstream fin(path, std::ios::binary);
                 if (!fin) {
                         throw std::runtime_error(path.string() + " open failed");
                 }
@@ -100,7 +123,6 @@ namespace mi_stl2bmp {
                         }
                         validate("endsolid");
                 }
-
                 return {normals, vertices};
         }
 }
@@ -128,7 +150,6 @@ int main(int argc, char **argv) {
                 }
                 const float pitch = 25.4f / static_cast<float>(dpi); // 1inch = 25.4 mm
                 const auto ppm = static_cast<int32_t>(std::round(1000.0f / pitch));
-        
                 auto [normals, vertices] = mi_stl2bmp::parse_stl(input_file);
                 //normalize
                 Eigen::Vector3f bmin = vertices.rowwise().minCoeff();
@@ -217,7 +238,7 @@ int main(int argc, char **argv) {
                                         fout.write(reinterpret_cast<char *>(line.data()), std::streamsize(line.size()));
                                 }
                         }
-                        std::cerr << "\r" << std::setw(5) << z + 1 << "/" << size.z();
+                        std::cerr << "\r" << std::setw(std::to_string(size.z()).length()) << z + 1 << "/" << size.z();
                 }
                 std::cerr << std::endl
                           << size.z() << " images(" << size.x() << "x" << size.y() << "," << dpi << "dpi) saved to " << fs::absolute(output_dir) << "." << std::endl;

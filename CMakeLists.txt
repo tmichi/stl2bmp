@@ -1,9 +1,10 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.15)
 PROJECT(stl2bmp
-        VERSION 1.1.1
+        VERSION 2.0.0
         DESCRIPTION "Voxelization of STL files"
         HOMEPAGE_URL https://github.com/tmichi/stl2bmp
-        LANGUAGES CXX)
+        LANGUAGES CXX
+        )
 #
 # Options.
 #
@@ -24,7 +25,7 @@ ENDIF (MSVC)
 FIND_PACKAGE(OpenGL REQUIRED)
 FIND_PACKAGE(Eigen3 3.4 REQUIRED)
 FIND_PACKAGE(glfw3 3.3 REQUIRED)
-FIND_PACKAGE(GLEW REQUIRED)
+FIND_PACKAGE(GLEW 2.1 REQUIRED)
 
 IF (UNIX)
         IF (APPLE) # Mac
@@ -65,7 +66,9 @@ ADD_CUSTOM_TARGET(check
         COMMAND stl2bmp ${CMAKE_SOURCE_DIR}/data/torus.stl 180
         COMMAND stl2bmp ${CMAKE_SOURCE_DIR}/data/torus.stl 14400
         )
-
+#
+# Packing
+#
 IF (PACK_ENABLED)
         SET(SCRIPT_DIR "${CMAKE_SOURCE_DIR}/scripts")
         IF (MSVC)

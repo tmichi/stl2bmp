@@ -19,7 +19,7 @@ glfwとかEigenはhomebrew などで入れておくと楽です。
 
 ## CMakeを用いたビルド
 
-### Mac
+### Mac, Linux
 
 ```shell
 % mkdir build
@@ -28,24 +28,19 @@ glfwとかEigenはhomebrew などで入れておくと楽です。
 % make 
 % make install
 ```
-
 ### Windows
-
 * CMakeLists.txtに以下の変数を追加
   * ``Eigen3_DIR`` : Eigen3Config.cmakeがあるところ （例: ``SET(Eigen3_DIR "C:/Program Files (x86)/Eigen3/share/eigen3/cmake")``)
   * ``glfw_DIR`` : glfw3Config.cmakeがあるところ（例 ``SET(glfw_DIR "C:/glfw-3.3.7/lib/cmake/glfw3")``)
   * ``GLEW_ROOT`` : glewのルート
-* CMakeでVSソリューションファイルを作って、Visual Studioでビルドする
-  #Linux
+* CMakeでVSソリューションファイルを作って、Visual Studioでビルドする。
 
 ## 手動でコンパイル
-
-* OpenGLとGLEWとGLFWを用いたコンパイル方法を探してコンパイルしてください。stl2bmp_main.cppをコンパイルすればできます。
-* Eigenはダウンロードしてインクルードパスを貼ればokです。
+* OpenGLとGLEWとGLFWを用いてビルドしてください。stl2bmp_main.cppをコンパイルすればできます。
 
 # 使い方
 
-```shell
+```
 % stl2bmp input.stl {dpi}
 ```
 
@@ -61,16 +56,16 @@ glfwとかEigenはhomebrew などで入れておくと楽です。
 ## ビルド
 
 * CMakeが使えない(を使わない）ので、ビルドできない。
-    * stl2bmp_main.cppの 以下の箇所を修正してください。あとは、GLFWのコンパイルのしかたを調べてビルドしてください。ファイルは１個だけなので、CUIでもできるはずです。
-    ```c++
-    :
-    //#include <stl2bmp_version.hpp> //ここをコメント
-    #define stl2bmp_VERSION 0.1.0 //（手入力でバージョンを入れる）
-    :
-   ```
-
+    * 手動でコンパイルしてください。stl2bmp_main.cppとOffScreenRenderer.hppをコンパイルすればできます。
+    * stl2bmp_main.cppでstl2bmp_version.hppをincludeしているので、それを作成してください。
+      (通常はCMakeで生成されます。)
+      ```cpp:stl2bmp_version.hpp
+      #ifndef stl2bmp_VERSION_HPP
+      #define stl2bmp_VERSION_HPP 1
+      #define stl2bmp_VERSION "1.1.1"
+      #endif //stl2bmp_VERSION_HPP
+      ```    
 ## 入出力
-
 * 画像の出力を他にしたい(TIFFとか)。
   * 画像変換ソフトでのバッチ処理をご利用ください。知っているものですと、IrfanViewとかImagemagickなどが考えられます。script/bmp2png.sh にbashでPNGに一括変換するプログラムを用意しました。
     ```shell
@@ -78,7 +73,7 @@ glfwとかEigenはhomebrew などで入れておくと楽です。
     ```
 * 他の解像度でもDrag&drop できるようにしてほしい.
   * バッチファイルを作ればokです。参考用に720dpi用のバッチファイルをstl2bmp720.batとして用意していますので、stl2bmpのパスを通すか、同じディレクトリ（フォルダ）においた上でご利用ください。
-* Binary STL以外の入力をサポートしてほしい。
+* STL以外の入力をサポートしてほしい。
   * コードが複雑になるためサポートの予定はありません。Meshlab等で binary STLに変換してお使いください。もしくはコードを改良してお使いください。
 
 ## 実行・結果の品質
