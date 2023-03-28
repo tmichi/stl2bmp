@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.15)
 PROJECT(stl2bmp
-        VERSION 1.1.1
+        VERSION 1.1.2
         DESCRIPTION "Voxelization of STL files"
         HOMEPAGE_URL https://github.com/tmichi/stl2bmp
         LANGUAGES CXX)
