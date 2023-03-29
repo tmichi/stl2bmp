@@ -13,6 +13,7 @@
 #include "OffScreenRenderer.hpp"
 #include <tuple>
 #include <sstream>
+#include <iterator>
 #include <iostream>
 #include <fstream>
 #include <filesystem>
