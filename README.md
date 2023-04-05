@@ -45,6 +45,7 @@ We suppose that the input mesh is closed and clean ( no skiny triangles). You ma
 ![Principle](images/principle.png)
 # Notes
  * Minimum size of image is 128x128. 
+ * Reference Number in RIKEN : 2023-1 
 # License
 * MIT License (See LICENSE.txt)
 # Author
